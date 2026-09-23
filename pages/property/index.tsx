@@ -11,6 +11,9 @@ import { Property } from '../../libs/types/property/property';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { Direction } from '../../libs/enums/common.enum';
+import { useQuery } from '@apollo/client';
+import { GET_PROPERTIES } from '../../apollo/user/query';
+import { T } from '../../libs/types/common';
 
 export const getStaticProps = async ({ locale }: any) => ({
 	props: {
@@ -31,21 +34,38 @@ const PropertyList: NextPage = ({ initialInput, ...props }: any) => {
 	const [sortingOpen, setSortingOpen] = useState(false);
 	const [filterSortName, setFilterSortName] = useState('New');
 
-	/** APOLLO REQUESTS **/
+	  /** APOLLO REQUESTS **/
+  const {
+    loading: getPropertiesLoading,
+    data: getPropertiesData,
+    error: getPropertiesError,
+    refetch: getPropertiesRefetch,
+  } = useQuery(GET_PROPERTIES, {
+    fetchPolicy: "network-only",
+    variables: { input: searchFilter },
+    notifyOnNetworkStatusChange: true,
+    onCompleted: (data: T) => {
+      setProperties(data?.getProperties?.list);
+      setTotal(data?.getProperties?.metaCounter[0]?.total);
+    },
+  });
 
-	/** LIFECYCLES **/
-	useEffect(() => {
-		if (router.query.input) {
-			const inputObj = JSON.parse(router?.query?.input as string);
-			setSearchFilter(inputObj);
-		}
+  /** LIFECYCLES **/
+  useEffect(() => {
+    if (router.query.input) {
+      const inputObj = JSON.parse(router?.query?.input as string);
+      setSearchFilter(inputObj);
+    }
 
-		setCurrentPage(searchFilter.page === undefined ? 1 : searchFilter.page);
-	}, [router]);
+    setCurrentPage(searchFilter.page === undefined ? 1 : searchFilter.page);
+  }, [router]);
 
-	useEffect(() => {}, [searchFilter]);
+  useEffect(() => {
+    console.log("searchFilter:", searchFilter);
+    // getPropertiesRefetch({ input: searchFilter }).then();
+  }, [searchFilter]);
 
-	/** HANDLERS **/
+  /** HANDLERS **/
 	const handlePaginationChange = async (event: ChangeEvent<unknown>, value: number) => {
 		searchFilter.page = value;
 		await router.push(
