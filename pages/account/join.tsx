@@ -44,7 +44,8 @@ const Join: NextPage = () => {
 	const doLogin = useCallback(async () => {
 		console.warn(input);
 		try {
-			await logIn(input.nick, input.password);
+			const loggedIn = await logIn(input.nick, input.password);
+			if (!loggedIn) return;
 			await router.push(`${router.query.referrer ?? '/'}`);
 		} catch (err: any) {
 			await sweetMixinErrorAlert(err.message);

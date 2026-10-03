@@ -15,18 +15,21 @@ export function setJwtToken(token: string) {
 	localStorage.setItem('accessToken', token);
 }
 
-export const logIn = async (nick: string, password: string): Promise<void> => {
+export const logIn = async (nick: string, password: string): Promise<boolean> => {
 	try {
 		const { jwtToken } = await requestJwtToken({ nick, password });
 
 		if (jwtToken) {
 			updateStorage({ jwtToken });
 			updateUserInfo(jwtToken);
+			return true;
 		}
+		return false;
 	} catch (err) {
 		console.warn('login err', err);
-		logOut();
-		// throw new Error('Login Err');
+		deleteStorage();
+		deleteUserInfo();
+		return false;
 	}
 };
 
